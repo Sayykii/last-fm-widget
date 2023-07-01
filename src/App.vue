@@ -1,12 +1,15 @@
 <template>
-  <div id="container" class="flex flex-col max-w-[450px] gap-1 bg-gray-800 p-2 rounded-md">
+  <div
+    id="container"
+    class="flex flex-col max-w-[400px] gap-1 bg-gray-800 p-2 rounded-md"
+  >
     <div
-      v-for="({ image, artist, isPlaying, name, album }, k) in tracks"
+      v-for="({ image, artist, isPlaying, name, album }, k) in tracks.slice(0, 1)"
       :key="k"
       class="flex flex-row justify-start items-center gap-2"
     >
       <img :src="image" class="w-16 aspect-square rounded-md" alt="" />
-      <div class="flex flex-col w-[300px]">
+      <div class="flex flex-col max-w-[320px]">
         <p class="truncate w-full text-white">{{ artist }} - {{ name }}</p>
         <p class="truncate w-full text-white">on {{ album }}</p>
       </div>
@@ -69,10 +72,16 @@ type ApiResponse = {
 let tracks = ref<Track[]>([]);
 
 onMounted(async () => {
-  const api_key = "f942c990c2dfd0ba13f38a245a5893d6";
+  const apiKey = import.meta.env.VITE_LASTFM_API_KEY as string;
+  await fetchData(apiKey)
+  turnToCanvas();
+  console.log(tracks, "tracks");
+});
+
+async function fetchData(apiKey: string) {
   const response = (
     await axios.get<ApiResponse>(
-      `http://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=sayykii&api_key=${api_key}&limit=5&format=json`
+      `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=sayykii&api_key=${apiKey}&limit=5&format=json`
     )
   ).data.recenttracks;
   const _tracks = response.track;
@@ -87,9 +96,7 @@ onMounted(async () => {
       isPlaying: track["@attr"]?.nowplaying,
     };
   });
-  turnToCanvas()
-  console.log(tracks, "tracks");
-});
+}
 
 function turnToCanvas() {
   const container = document.getElementById("container");
@@ -101,8 +108,7 @@ function turnToCanvas() {
   canvas.height = height ?? 0;
   ctx?.drawImage(canvas, 0, 0, width ?? 0, height ?? 0);
   const dataURL = canvas.toDataURL("image/png");
-  console.log(dataURL);
-  return dataURL
+  return dataURL;
 }
 </script>
 
